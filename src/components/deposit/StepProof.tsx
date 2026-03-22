@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react'
 import { useDepositStore } from '@/store/deposit.store'
 import { submitSingleDeposit } from '@/lib/api'
+import { buildSingleDepositDto } from '@/lib/depositPayload'
+import { fetchExtractedText } from '@/lib/extraction'
 import { Upload, Loader2, X } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -41,11 +43,33 @@ export default function StepProof() {
     }
     setLoading(true)
     try {
+      let proofText = text.trim()
+      let effectiveMethod = verificationMethod!
+      if (verificationMethod === 'SCREENSHOT' && file) {
+        try {
+          proofText = await fetchExtractedText(file, file.name)
+          effectiveMethod = 'SMS'
+        } catch (err: any) {
+          setError(err?.message ?? 'Failed to read the screenshot. Please try again.')
+          return
+        }
+      }
+      const singlePayload = buildSingleDepositDto({
+        amount: amount!,
+        paymentMethod: paymentMethod!,
+        verificationMethod: effectiveMethod,
+        rawProof: proofText || null,
+      })
+      console.log('SingleDepositDto payload ready for integration:', singlePayload)
+      if (verificationMethod === 'SCREENSHOT' && file) {
+        console.log('Screenshot file ready for upload:', { name: file.name, size: file.size })
+        console.log('Extracted SMS proof:', proofText)
+      }
       const result = await submitSingleDeposit({
         amount: amount!,
         paymentMethod: paymentMethod!,
-        verificationMethod: verificationMethod!,
-        rawProof: text || undefined,
+        verificationMethod: effectiveMethod,
+        rawProof: proofText || undefined,
         screenshotFile: file ?? undefined,
       })
       setResult(result)

@@ -15,7 +15,9 @@
     "zustand": "^4.5.2",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
-    "tailwind-merge": "^2.3.0"
+    "tailwind-merge": "^2.3.0",
+    "sharp": "^0.32.5",
+    "tesseract.js": "^4.1.1"
   },
   "devDependencies": {
     "typescript": "^5",

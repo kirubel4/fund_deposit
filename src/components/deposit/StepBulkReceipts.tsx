@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useDepositStore } from '@/store/deposit.store'
+import { useDepositStore, type BulkReceipt } from '@/store/deposit.store'
 import { submitBulkDeposit } from '@/lib/api'
+import { buildBulkDepositDto } from '@/lib/depositPayload'
+import { fetchExtractedText, base64ToBlob } from '@/lib/extraction'
 import { Trash2, Plus, Loader2, Upload, X, Image } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -38,6 +40,13 @@ export default function StepBulkReceipts() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  async function extractTextForReceipt(receipt: BulkReceipt) {
+    const base64Blob = receipt.rawProof ? base64ToBlob(receipt.rawProof) : null
+    const source = receipt.file ?? base64Blob
+    if (!source) return receipt.rawProof ?? ''
+    return fetchExtractedText(source, receipt.fileName ?? 'receipt.png')
+  }
+
   function addReceipt() {
     setAddErr('')
     const n = parseFloat(draftAmount)
@@ -52,6 +61,7 @@ export default function StepBulkReceipts() {
         amount: n,
         fileName: draftFile.name,
         isScreenshot: true,
+        file: draftFile,
       })
       setDraftFile(null)
       setDraftPreview(null)
@@ -72,11 +82,30 @@ export default function StepBulkReceipts() {
     if (bulkReceipts.length === 0) { setError('Add at least one receipt.'); return }
     setLoading(true)
     try {
+      let preparedReceipts = bulkReceipts
+      let effectiveMethod = verificationMethod!
+      if (verificationMethod === 'SCREENSHOT') {
+        preparedReceipts = await Promise.all(
+          bulkReceipts.map(async (receipt) => {
+            if (!receipt.isScreenshot) return receipt
+            const extracted = await extractTextForReceipt(receipt)
+            return { ...receipt, rawProof: extracted || receipt.rawProof }
+          }),
+        )
+        effectiveMethod = 'SMS'
+      }
+      const bulkPayload = buildBulkDepositDto({
+        declaredTotal: declaredTotal!,
+        paymentMethod: paymentMethod!,
+        verificationMethod: effectiveMethod,
+        receipts: preparedReceipts,
+      })
+      console.log('BulkDepositDto payload ready for integration:', bulkPayload)
       const result = await submitBulkDeposit({
         declaredTotal: declaredTotal!,
         paymentMethod: paymentMethod!,
-        verificationMethod: verificationMethod!,
-        receipts: bulkReceipts,
+        verificationMethod: effectiveMethod,
+        receipts: preparedReceipts,
       })
       setResult(result)
       setStep(5)

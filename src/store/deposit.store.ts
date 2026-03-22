@@ -10,6 +10,7 @@ export interface BulkReceipt {
   amount: number
   fileName?: string       // display name when screenshot
   isScreenshot?: boolean
+  file?: File             // keep the original screenshot for extraction
 }
 
 export interface DepositState {
