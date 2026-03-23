@@ -1,20 +1,34 @@
+// ── app/api/deposit/bulk/route.ts ─────────────────────────────────────────────
+// Proxy: reads httpOnly session cookie → forwards to NestJS as Bearer token.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { NextRequest, NextResponse } from 'next/server'
+import { getSessionCookie, verifySessionJwt } from '@/lib/session'
 
 const NESTJS = process.env.NESTJS_API_URL!
 
-// ── POST /api/deposit/bulk ────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const auth = req.headers.get('authorization') ?? ''
+  const jwt = getSessionCookie(req)
+  if (!jwt) return NextResponse.json({ message: 'Unauthenticated.' }, { status: 401 })
 
   try {
-    // const body = await req.json()
-    // const res = await fetch(`${NESTJS}/web/deposit/bulk`, {
-    //   method: 'POST',
-    //   headers: { Authorization: auth, 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(body),
-    // })
-    // const data = await res.json()
-    return NextResponse.json("data", { status: 201 })
+    await verifySessionJwt(jwt)
+  } catch {
+    return NextResponse.json({ message: 'Session expired.' }, { status: 401 })
+  }
+
+  try {
+    const body = await req.json()
+    const res = await fetch(`${NESTJS}/api/deposit/bulk`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jwt}`,
+      },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    return NextResponse.json(data, { status: res.status })
   } catch (err: any) {
     return NextResponse.json({ message: err.message }, { status: 500 })
   }

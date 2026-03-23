@@ -1,66 +1,74 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { exchangeRedirectToken, fetchMe } from "@/lib/api";
-import { useAuthStore } from "@/store/auth.store";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
+import { getRedirectErrorMessage } from '@/lib/token'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 
-export default function DepositLandingPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const { setSession, sessionToken } = useAuthStore();
-  const [status, setStatus] = useState<"loading" | "error">("loading");
-  const [errorMsg, setErrorMsg] = useState("");
+// ── Auth gate ─────────────────────────────────────────────────────────────────
+// Flow:
+//  1. External service redirects here with ?ref=<encoded>&sig=<hmac>
+//  2. We POST to /api/auth/session which decodes, verifies, and sets cookie
+//  3. Redirect to /deposit/portal
+//
+// If the user already has a valid session cookie (returning visit without
+// URL params), we skip straight to the portal.
+//
+// If params are missing entirely → show "not allowed" message.
+// If params are invalid/expired  → show specific error message.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function DepositLandingContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const ref = searchParams.get('ref')
+    const sig = searchParams.get('sig')
 
     async function boot() {
-      if (!token && sessionToken) {
-        try {
-          const user = await fetchMe();
-          setSession(sessionToken, user);
-          router.replace("/deposit/portal");
-          return;
-        } catch {
-          /* fall through */
+      // No URL params — check if they already have a valid session
+      if (!ref || !sig) {
+        const check = await fetch('/api/auth/me')
+        if (check.ok) {
+          router.replace('/deposit/portal')
+        } else {
+          setError(
+            "You're not allowed to access this page directly. " +
+            "Please return to HabeshaUnlocker and use the link provided.",
+          )
         }
+        return
       }
 
-      if (!token) {
-        setErrorMsg(
-          "No authentication token found. Please return to HabeshaUnlocker and try again.",
-        );
-        setStatus("error");
-        return;
-      }
-
+      // Exchange the redirect params for an httpOnly session cookie
       try {
-        const { sessionToken: newToken } = await exchangeRedirectToken(token);
-        localStorage.setItem(
-          "hu-session",
-          JSON.stringify({ state: { sessionToken: newToken } }),
-        );
-        const user = await fetchMe();
-        setSession(newToken, {
-          userId: "1234567",
-          email: "sdf@fd.cn",
-          firstName: "kir",
-        });
-        router.replace("/deposit/portal");
-      } catch (err: any) {
-        setErrorMsg(
-          err.message ?? "Authentication failed. The link may have expired.",
-        );
-        setStatus("error");
+        const res = await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ref, sig }),
+        })
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          const code = data?.code ?? 'UNKNOWN_ERROR'
+          setError(getRedirectErrorMessage(code))
+          return
+        }
+
+        // Cookie is now set — redirect to portal (clean URL, no params)
+        router.replace('/deposit/portal')
+      } catch {
+        setError(getRedirectErrorMessage('UNKNOWN_ERROR'))
       }
     }
 
-    boot();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    boot()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (status === "error") {
+  if (error) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
         <div className="card max-w-sm w-full p-8 text-center space-y-5">
@@ -68,20 +76,18 @@ export default function DepositLandingPage() {
             <AlertTriangle size={22} className="text-red-400" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-white">
-              Authentication Failed
-            </h1>
-            <p className="text-sm text-zinc-400 mt-2">{errorMsg}</p>
+            <h1 className="text-lg font-semibold text-white">Access Denied</h1>
+            <p className="text-sm text-zinc-400 mt-2 leading-relaxed">{error}</p>
           </div>
           <a
-            href={process.env.NEXT_PUBLIC_PARENT_APP_URL ?? "#"}
-            className="btn-secondary w-full"
+            href={process.env.NEXT_PUBLIC_PARENT_APP_URL ?? '#'}
+            className="btn-secondary w-full block text-center"
           >
             ← Back to HabeshaUnlocker
           </a>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -89,5 +95,19 @@ export default function DepositLandingPage() {
       <Loader2 size={24} className="text-blue-400 animate-spin" />
       <p className="text-zinc-500 text-sm">Authenticating your session…</p>
     </div>
-  );
+  )
+}
+
+export default function DepositLandingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+          <Loader2 size={24} className="text-blue-400 animate-spin" />
+        </div>
+      }
+    >
+      <DepositLandingContent />
+    </Suspense>
+  )
 }

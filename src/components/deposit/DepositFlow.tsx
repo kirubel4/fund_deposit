@@ -1,15 +1,15 @@
 'use client'
 
 import { useDepositStore } from '@/store/deposit.store'
-import ModeSelector from './ModeSelector'
-import StepAmount from './StepAmount'
-import StepBank from './StepBank'
-import StepVerMethod from './StepVerMethod'
-import StepProof from './StepProof'
-import StepBulkReceipts from './StepBulkReceipts'
-import StepResult from './StepResult'
-import ProgressBar from './ProgressBar'
 import { ChevronLeft } from 'lucide-react'
+import ModeSelector from './ModeSelector'
+import ProgressBar from './ProgressBar'
+import StepAmount from './steps/StepAmount'
+import StepBank from './steps/StepBank'
+import StepVerMethod from './steps/StepVerMethod'
+import StepProof from './steps/StepProof'
+import StepBulkReceipts from './steps/StepBulkReceipts'
+import StepResult from './steps/StepResult'
 
 export default function DepositFlow() {
   const { mode, step, reset, setStep } = useDepositStore()
@@ -18,9 +18,7 @@ export default function DepositFlow() {
     <div className="space-y-5 animate-fade-in">
       {step === 1 && <ModeSelector />}
 
-      {step > 1 && step < 5 && (
-        <ProgressBar step={step} total={4} />
-      )}
+      {step > 1 && step < 5 && <ProgressBar step={step} total={4} />}
 
       {step === 1 && <StepAmount />}
       {step === 2 && <StepBank />}

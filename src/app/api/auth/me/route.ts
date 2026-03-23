@@ -1,20 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server'
+// ── app/api/auth/me/route.ts ──────────────────────────────────────────────────
+// Returns the authenticated user's identity by reading and verifying the
+// httpOnly session cookie. No token is ever read from the client.
+// ─────────────────────────────────────────────────────────────────────────────
 
-const NESTJS = process.env.NESTJS_API_URL!
+import { NextRequest, NextResponse } from 'next/server'
+import { getSessionCookie, verifySessionJwt } from '@/lib/session'
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization') ?? ''
+  const jwt = getSessionCookie(req)
+
+  if (!jwt) {
+    return NextResponse.json({ message: 'No session.' }, { status: 401 })
+  }
 
   try {
-    // const res = await fetch(`${NESTJS}/web/auth/me`, {
-    //   headers: { Authorization: auth },
-    // })
-    // const data = await res.json()
-    // if (!res.ok) {
-    //   return NextResponse.json({ message: data.message }, { status: res.status })
-    // }
-    return NextResponse.json("data")
-  } catch (err: any) {
-    return NextResponse.json({ message: err.message }, { status: 500 })
+    const { userId, email } = await verifySessionJwt(jwt)
+    return NextResponse.json({ userId, email })
+  } catch {
+    return NextResponse.json({ message: 'Session expired or invalid.' }, { status: 401 })
   }
 }
