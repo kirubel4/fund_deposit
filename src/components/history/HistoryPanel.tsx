@@ -71,7 +71,7 @@ export default function HistoryPanel() {
           </p>
 
           <div className="space-y-2">
-            {data.deposits.map((dep, i) => (
+            {data.deposits.map((dep: any, i: number) => (
               <DepositCard key={dep.id} dep={dep} index={i} />
             ))}
           </div>

@@ -100,4 +100,18 @@ export async function fetchHistory(page = 0, pageSize = HISTORY_DEFAULT_PAGE_SIZ
   const hasMore = typeof data.hasMore === 'boolean' ? data.hasMore : inferredHasMore
 
   return { ...data, total, page: safePage, pageSize: safePageSize, totalPages, hasMore }
+
+  
+}
+
+export async function fetchReceivingAccounts():
+ Promise<
+ Array<{
+  paymentMethod: string
+  accountNumber: string
+  accountName: string
+
+}>> 
+{
+  return apiFetch('/api/deposit/receiving-account')
 }
