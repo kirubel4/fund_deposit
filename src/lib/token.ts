@@ -71,8 +71,7 @@ export async function buildRedirectParams(
   email: string,
   userId: string,
 ): Promise<{ ref: string; sig: string }> {
-  const secret =
-    process.env.URL_SECRET ?? "abebebesobelaenakezademomeotealuabba";
+  const secret = process.env.URL_SECRET!;
 
   // Salt makes every URL unique even for the same user
   const salt = Math.random().toString(36).slice(2, 10);
@@ -104,8 +103,7 @@ export async function decodeRedirectParams(
   ref: string,
   sig: string,
 ): Promise<{ email: string; userId: string }> {
-  const secret =
-    process.env.URL_SECRET ?? "abebebesobelaenakezademomeotealuabba";
+  const secret = process.env.URL_SECRET!;
 
   // 1. Verify HMAC — reject tampered payloads before doing anything else
   const valid = await verifyHmac(ref, sig, secret);

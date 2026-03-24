@@ -1,5 +1,4 @@
-// scripts/test-url.ts
-
+import "dotenv/config";
 import { buildRedirectParams } from "@/lib/token";
 
 async function main() {

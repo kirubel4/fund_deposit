@@ -30,7 +30,7 @@ function fromB64url(str: string): ArrayBuffer {
 // ── Crypto key ───────────────────────────────────────────────────────────────
 
 async function getSigningKey(): Promise<CryptoKey> {
-  const secret = process.env.SESSION_SECRET??"12345687654312345";
+  const secret = process.env.SESSION_SECRET!;
   if (!secret) throw new Error("SESSION_SECRET env var is not set");
 
   return crypto.subtle.importKey(

@@ -58,7 +58,6 @@ export async function submitSingleDeposit(payload: {
   rawProof?: string | null;
   accountNumber?: string;
 }) {
-  console.log(payload);
   return apiFetch<any>("/api/deposit", {
     method: "POST",
     body: JSON.stringify({
