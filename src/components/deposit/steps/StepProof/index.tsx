@@ -75,8 +75,8 @@ export default function StepProof() {
         paymentMethod: paymentMethod!,
         verificationMethod: effectiveMethod,
         rawProof: proofText || undefined,
-        senderAccountNumber: accountNumber.trim() || undefined,
-      })
+        accountNumber: accountNumber.trim() || undefined,
+      });
 
       setResult(result)
       setStep(5)
