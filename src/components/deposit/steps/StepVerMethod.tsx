@@ -234,7 +234,16 @@ export default function StepVerMethod() {
                           <span className="text-white font-medium">
                             transaction ID
                           </span>{" "}
-                          are fully visible and not cropped.
+                          are fully visible and not cropped. And{" "}
+                          <span className="text-white font-medium">
+                            Make Sure
+                          </span>{" "}
+                          the{" "}
+                          <span className="text-white font-medium">
+                            {" "}
+                            Screenshot{" "}
+                          </span>{" "}
+                          is in one of the above style☝️
                         </p>
                       </div>
                     </div>
@@ -284,14 +293,14 @@ const DEMO_LINK: Record<string, string> = {
 
 // ── Demo photo (screenshot method only) ──────────────────────────────────────
 const DEMO_PHOTOS: Record<string, string> = {
-  CBE: "https://res.cloudinary.com/dv5ngz0tc/image/upload/photo_2026-03-20_10-10-21_nuzzcb.jpg",
+  CBE: "https://res.cloudinary.com/dv5ngz0tc/image/upload/photo_2026-03-25_14-49-27_ftbp4t.jpg",
   TELEBIRR:
-    "https://res.cloudinary.com/dv5ngz0tc/image/upload/photo_2026-03-20_10-10-21_nuzzcb.jpg",
+    "https://res.cloudinary.com/dv5ngz0tc/image/upload/photo_2026-03-25_15-05-45_tmv2z2.jpg",
   EBIRR:
-    "https://res.cloudinary.com/dv5ngz0tc/image/upload/photo_2026-03-20_10-10-21_nuzzcb.jpg",
+    "https://res.cloudinary.com/dv5ngz0tc/image/upload/photo_2026-03-25_15-02-15_gqajvm.jpg",
   ABYSSINIA:
-    "https://res.cloudinary.com/dv5ngz0tc/image/upload/photo_2026-03-20_10-10-21_nuzzcb.jpg",
-  NIB: "https://res.cloudinary.com/dv5ngz0tc/image/upload/photo_2026-03-20_10-10-21_nuzzcb.jpg",
+    "https://res.cloudinary.com/dv5ngz0tc/image/upload/photo_2026-03-25_14-56-43_d44b7j.jpg",
+  NIB: "https://res.cloudinary.com/dv5ngz0tc/image/upload/photo_2026-03-25_14-56-43_d44b7j.jpg",
 };
 
 const BANK_SENDER: Record<string, string> = {
