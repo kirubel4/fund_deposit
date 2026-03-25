@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useDepositStore, PaymentMethod } from "@/store/deposit.store";
-import { fetchReceivingAccounts } from "@/lib/api";
+import { useReceivingAccounts } from "@/lib/queries";
 import { Loader2, Copy, Check } from "lucide-react";
+import { useState } from "react";
 import clsx from "clsx";
 
 const BANK_META: Record<string, { tag: string; label: string }> = {
@@ -13,12 +13,6 @@ const BANK_META: Record<string, { tag: string; label: string }> = {
   ABYSSINIA: { tag: "BOA", label: "Bank of Abyssinia" },
   NIB: { tag: "NIB", label: "NIB International" },
 };
-
-interface Account {
-  paymentMethod: string;
-  accountNumber: string;
-  accountName: string;
-}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -50,19 +44,9 @@ function CopyButton({ text }: { text: string }) {
 export default function StepBank() {
   const { paymentMethod, setPaymentMethod, amount, setStep } =
     useDepositStore();
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchReceivingAccounts()
-      .then(setAccounts)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const selected =
-    accounts.find((a) => a.paymentMethod === paymentMethod) ?? null;
+  // ✅ Cached — hits the network once per session (staleTime: Infinity)
+  const { data: accounts = [], isLoading, error } = useReceivingAccounts();
 
   return (
     <div className="space-y-4 stagger">
@@ -73,22 +57,19 @@ export default function StepBank() {
         </p>
       </div>
 
-      {/* Loading */}
-      {loading && (
+      {isLoading && (
         <div className="flex items-center justify-center py-10 gap-2 text-zinc-500 text-sm">
           <Loader2 size={16} className="animate-spin" /> Loading banks…
         </div>
       )}
 
-      {/* Error */}
       {error && (
         <div className="card-sm p-4 text-xs text-red-400 border-red-500/20">
-          {error}
+          {(error as Error).message}
         </div>
       )}
 
-      {/* Bank cards */}
-      {!loading && !error && (
+      {!isLoading && !error && (
         <div className="space-y-2">
           {accounts.map(
             ({ paymentMethod: key, accountNumber, accountName }) => {
@@ -105,7 +86,6 @@ export default function StepBank() {
                     isSelected ? "border-blue-500" : "",
                   )}
                 >
-                  {/* ── Bank header row ── */}
                   <div
                     className={clsx(
                       "flex items-center justify-between px-4 py-3",
@@ -143,7 +123,6 @@ export default function StepBank() {
                     )}
                   </div>
 
-                  {/* ── Account details — always visible ── */}
                   <div className="border-t border-zinc-800 px-4 py-3 grid grid-cols-2 gap-y-2">
                     <div>
                       <p className="text-[10px] text-zinc-600 uppercase tracking-wider mb-0.5">
@@ -165,7 +144,6 @@ export default function StepBank() {
                       </div>
                     </div>
 
-                    {/* Amount row — only shows when this bank is selected */}
                     {isSelected && amount && (
                       <div className="col-span-2 mt-1 pt-2 border-t border-zinc-800 flex items-center justify-between">
                         <p className="text-xs text-zinc-500">Send exactly</p>
@@ -184,7 +162,7 @@ export default function StepBank() {
 
       <button
         onClick={() => setStep(3)}
-        disabled={!paymentMethod || loading || accounts.length === 0}
+        disabled={!paymentMethod || isLoading || accounts.length === 0}
         className="btn-primary w-full"
       >
         Continue

@@ -1,10 +1,3 @@
-// ── lib/api.ts ────────────────────────────────────────────────────────────────
-// All API calls go through Next.js proxy routes (/api/...).
-// No tokens, no NestJS URL, no hardcoded credentials here.
-// Auth is handled server-side via the httpOnly session cookie —
-// the browser attaches it automatically on every same-origin request.
-// ─────────────────────────────────────────────────────────────────────────────
-
 import type { BulkReceipt } from "@/store/deposit.store";
 
 // ── Core fetch wrapper ────────────────────────────────────────────────────────
