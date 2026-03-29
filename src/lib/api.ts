@@ -1,4 +1,4 @@
-import type { BulkReceipt } from "@/store/deposit.store";
+
 
 // ── Core fetch wrapper ────────────────────────────────────────────────────────
 
@@ -65,27 +65,7 @@ export async function submitSingleDeposit(payload: {
   });
 }
 
-// ── Bulk deposit ──────────────────────────────────────────────────────────────
 
-export async function submitBulkDeposit(payload: {
-  declaredTotal: number;
-  paymentMethod: string;
-  verificationMethod: string;
-  receipts: BulkReceipt[];
-}) {
-  return apiFetch<any>("/api/deposit/bulk", {
-    method: "POST",
-    body: JSON.stringify({
-      declaredTotal: payload.declaredTotal,
-      paymentMethod: payload.paymentMethod,
-      verificationMethod: payload.verificationMethod,
-      receipts: payload.receipts.map((r) => ({
-        rawProof: r.rawProof,
-        amount: r.amount,
-      })),
-    }),
-  });
-}
 
 // ── History ───────────────────────────────────────────────────────────────────
 
