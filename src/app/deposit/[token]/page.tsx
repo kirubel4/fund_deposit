@@ -65,7 +65,7 @@ function DepositLandingContent() {
             href={process.env.NEXT_PUBLIC_PARENT_APP_URL ?? "#"}
             className="btn-secondary w-full block text-center"
           >
-            ← Back to HabeshaUnlocker
+            ← Back to HostServer
           </a>
         </div>
       </div>
